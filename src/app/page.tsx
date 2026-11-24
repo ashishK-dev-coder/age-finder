@@ -1,145 +1,156 @@
 "use client";
 
-import React, { useState, useRef, useMemo } from "react";
-import DateSegmentInput from "@/components/DateSegmentInput";
-import { calculateAge } from "@/utils/dateCalculations";
-import { RotateCcw, Calendar, AlertCircle } from "lucide-react";
+import React, { useState, useRef } from "react";
+import { RotateCcw } from "lucide-react";
 
 export default function HomePage() {
-  const [day, setDay] = useState("12");
-  const [month, setMonth] = useState("06");
-  const [year, setYear] = useState("2001");
-  const [separator, setSeparator] = useState<"/" | "-">("/");
+  const [birthYearInput, setBirthYearInput] = useState("1998");
+  const [fatherAgeInput, setFatherAgeInput] = useState("27");
+  const [motherAgeInput, setMotherAgeInput] = useState("24");
 
-  const dayRef = useRef<HTMLInputElement>(null);
-  const monthRef = useRef<HTMLInputElement>(null);
-  const yearRef = useRef<HTMLInputElement>(null);
+  const birthRef = useRef<HTMLInputElement>(null);
+
+  const currentYear = new Date().getFullYear();
+
+  // In 1 -> User Age (R1)
+  const bYear = parseInt(birthYearInput, 10);
+  const isBirthValid =
+    birthYearInput.length === 4 &&
+    !isNaN(bYear) &&
+    bYear >= 1900 &&
+    bYear <= currentYear;
+  const userAge = isBirthValid ? currentYear - bYear : null;
+
+  // Father Born Year (depends only on In 1)
+  const fAge = parseInt(fatherAgeInput, 10);
+  const isFatherValid = !isNaN(fAge) && fAge > 0 && fAge < 120;
+  const fatherBornYear =
+    userAge !== null && isFatherValid ? currentYear - (userAge + fAge) : null;
+
+  // Mother Born Year (depends only on In 1, independent of father)
+  const mAge = parseInt(motherAgeInput, 10);
+  const isMotherValid = !isNaN(mAge) && mAge > 0 && mAge < 120;
+  const motherBornYear =
+    userAge !== null && isMotherValid ? currentYear - (userAge + mAge) : null;
 
   const handleClear = () => {
-    setDay("");
-    setMonth("");
-    setYear("");
-    dayRef.current?.focus();
+    setBirthYearInput("");
+    setFatherAgeInput("");
+    setMotherAgeInput("");
+    birthRef.current?.focus();
   };
 
-  const ageData = useMemo(() => {
-    if (!day || !month || !year || year.length !== 4) return null;
-    const d = parseInt(day, 10);
-    const m = parseInt(month, 10);
-    const y = parseInt(year, 10);
-    if (isNaN(d) || isNaN(m) || isNaN(y)) return null;
-    return calculateAge(d, m, y);
-  }, [day, month, year]);
-
   return (
-    <main className="min-h-screen flex items-center justify-center p-4 sm:p-6 bg-slate-950 selection:bg-indigo-500 selection:text-white">
-      {/* Background soft glow */}
-      <div className="absolute w-96 h-96 bg-indigo-600/10 rounded-full blur-3xl pointer-events-none -top-10 -left-10" />
-      <div className="absolute w-96 h-96 bg-violet-600/10 rounded-full blur-3xl pointer-events-none -bottom-10 -right-10" />
+    <main className="min-h-screen flex items-center justify-center p-3 sm:p-4 bg-slate-950 text-white selection:bg-indigo-500 selection:text-white">
+      <div className="w-full max-w-md bg-slate-900 border border-slate-800 rounded-2xl p-5 shadow-2xl flex flex-col justify-between space-y-4">
+        {/* Top: Only Age Finder */}
+        <h1 className="text-2xl font-bold text-center tracking-tight text-white">
+          Age Finder
+        </h1>
 
-      <div className="w-full max-w-lg bg-slate-900/90 border border-slate-800 rounded-3xl p-6 sm:p-8 shadow-2xl backdrop-blur-xl relative z-10 space-y-6">
-        {/* Header */}
-        <div className="text-center space-y-1">
-          <div className="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-indigo-500/10 border border-indigo-500/20 text-indigo-400 text-xs font-semibold uppercase tracking-wider mb-1">
-            <Calendar className="w-3.5 h-3.5" /> Age Calculator
-          </div>
-          <h1 className="text-2xl sm:text-3xl font-bold text-white tracking-tight">
-            Age Finder
-          </h1>
-          <p className="text-xs text-slate-400">
-            Type date with auto-jump or paste (e.g. 12/06/2001 or 12-06-2001)
-          </p>
-        </div>
-
-        {/* 1. Date Input Section */}
-        <div>
-          <DateSegmentInput
-            day={day}
-            month={month}
-            year={year}
-            setDay={setDay}
-            setMonth={setMonth}
-            setYear={setYear}
-            dayRef={dayRef}
-            monthRef={monthRef}
-            yearRef={yearRef}
-            separator={separator}
-            setSeparator={setSeparator}
+        {/* In 1: Your Birth Year */}
+        <div className="space-y-1.5">
+          <label className="block text-[11px] font-semibold text-slate-400 uppercase tracking-wider text-center">
+            Your Birth Year
+          </label>
+          <input
+            ref={birthRef}
+            type="text"
+            inputMode="numeric"
+            maxLength={4}
+            placeholder="e.g. 1998"
+            value={birthYearInput}
+            onChange={(e) =>
+              setBirthYearInput(e.target.value.replace(/\D/g, "").slice(0, 4))
+            }
+            className="w-full text-center text-2xl font-mono font-bold py-2 bg-slate-950 border border-slate-800 rounded-xl text-white placeholder-slate-600 focus:outline-none focus:border-indigo-500 transition-colors"
+            autoFocus
           />
         </div>
 
-        {/* 2. Clear Button In The Middle */}
-        <div className="flex items-center justify-center pt-2 pb-1">
+        {/* User Age Result */}
+        {userAge !== null && (
+          <div className="bg-slate-950 border border-indigo-500/30 rounded-xl py-2.5 px-3 text-center">
+            <span className="text-[10px] uppercase tracking-wider text-slate-400 font-semibold">
+              Your Age
+            </span>
+            <div className="text-3xl font-black font-mono text-indigo-400">
+              {userAge} <span className="text-xs font-normal text-slate-500">Years</span>
+            </div>
+          </div>
+        )}
+
+        {/* Father & Mother Inputs Grid (both depend only on In 1) */}
+        {userAge !== null && (
+          <div className="pt-2 border-t border-slate-800/80 space-y-3">
+            <div className="grid grid-cols-2 gap-2.5">
+              {/* Father Box */}
+              <div className="bg-slate-950/70 border border-slate-800 p-2.5 rounded-xl space-y-1.5">
+                <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center">
+                  Father&apos;s Age
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={3}
+                  placeholder="e.g. 27"
+                  value={fatherAgeInput}
+                  onChange={(e) =>
+                    setFatherAgeInput(e.target.value.replace(/\D/g, "").slice(0, 3))
+                  }
+                  className="w-full text-center text-xl font-mono font-bold py-1.5 bg-slate-900 border border-slate-700/80 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-purple-500 transition-colors"
+                />
+
+                {fatherBornYear !== null && (
+                  <div className="pt-1.5 text-center border-t border-slate-800">
+                    <span className="text-[9px] uppercase text-slate-500 block">Born Year</span>
+                    <span className="text-lg font-bold font-mono text-purple-400">
+                      {fatherBornYear}
+                    </span>
+                  </div>
+                )}
+              </div>
+
+              {/* Mother Box (Depends only on In 1) */}
+              <div className="bg-slate-950/70 border border-slate-800 p-2.5 rounded-xl space-y-1.5">
+                <label className="block text-[10px] font-semibold text-slate-400 uppercase tracking-wider text-center">
+                  Mother&apos;s Age
+                </label>
+                <input
+                  type="text"
+                  inputMode="numeric"
+                  maxLength={3}
+                  placeholder="e.g. 24"
+                  value={motherAgeInput}
+                  onChange={(e) =>
+                    setMotherAgeInput(e.target.value.replace(/\D/g, "").slice(0, 3))
+                  }
+                  className="w-full text-center text-xl font-mono font-bold py-1.5 bg-slate-900 border border-slate-700/80 rounded-lg text-white placeholder-slate-600 focus:outline-none focus:border-pink-500 transition-colors"
+                />
+
+                {motherBornYear !== null && (
+                  <div className="pt-1.5 text-center border-t border-slate-800">
+                    <span className="text-[9px] uppercase text-slate-500 block">Born Year</span>
+                    <span className="text-lg font-bold font-mono text-pink-400">
+                      {motherBornYear}
+                    </span>
+                  </div>
+                )}
+              </div>
+            </div>
+          </div>
+        )}
+
+        {/* Clear Button Pinned to Bottom */}
+        <div className="pt-2">
           <button
             type="button"
             onClick={handleClear}
-            className="flex items-center gap-2 px-6 py-2.5 bg-slate-800/80 hover:bg-rose-950/40 border border-slate-700/60 hover:border-rose-500/50 text-slate-300 hover:text-rose-300 rounded-xl font-medium text-sm transition-all duration-200 shadow-sm cursor-pointer active:scale-95"
+            className="w-full flex items-center justify-center gap-2 py-2 bg-slate-800 hover:bg-slate-700 active:bg-slate-700/80 border border-slate-700 text-slate-300 hover:text-white rounded-xl text-xs font-semibold uppercase tracking-wider transition-colors cursor-pointer"
           >
-            <RotateCcw className="w-4 h-4" />
+            <RotateCcw className="w-3.5 h-3.5" />
             Clear
           </button>
-        </div>
-
-        {/* 3. Direct Age Show */}
-        <div className="pt-2 border-t border-slate-800/80">
-          {ageData && ageData.isValid ? (
-            <div className="space-y-4">
-              <div className="text-center">
-                <span className="text-xs uppercase tracking-wider text-slate-400 font-semibold">
-                  Your Exact Age
-                </span>
-                <div className="text-xl sm:text-2xl font-bold text-indigo-300 mt-1">
-                  {ageData.years} Years, {ageData.months} Months, {ageData.days} Days
-                </div>
-              </div>
-
-              {/* 3 Direct Age Cards */}
-              <div className="grid grid-cols-3 gap-3">
-                <div className="bg-slate-950/80 border border-indigo-500/30 rounded-2xl p-4 text-center">
-                  <div className="text-3xl sm:text-4xl font-extrabold font-mono text-white">
-                    {ageData.years}
-                  </div>
-                  <div className="text-xs font-semibold text-indigo-400 uppercase tracking-wider mt-1">
-                    Years
-                  </div>
-                </div>
-
-                <div className="bg-slate-950/80 border border-purple-500/30 rounded-2xl p-4 text-center">
-                  <div className="text-3xl sm:text-4xl font-extrabold font-mono text-white">
-                    {ageData.months}
-                  </div>
-                  <div className="text-xs font-semibold text-purple-400 uppercase tracking-wider mt-1">
-                    Months
-                  </div>
-                </div>
-
-                <div className="bg-slate-950/80 border border-pink-500/30 rounded-2xl p-4 text-center">
-                  <div className="text-3xl sm:text-4xl font-extrabold font-mono text-white">
-                    {ageData.days}
-                  </div>
-                  <div className="text-xs font-semibold text-pink-400 uppercase tracking-wider mt-1">
-                    Days
-                  </div>
-                </div>
-              </div>
-
-              {/* Summary line */}
-              <div className="bg-slate-950/40 border border-slate-800/60 rounded-xl px-4 py-2.5 text-center text-xs text-slate-400">
-                Total lived: <span className="font-mono text-white font-semibold">{ageData.totalDays.toLocaleString()}</span> days
-                {" • "}
-                Born on a <span className="text-indigo-300 font-medium">{ageData.dayOfWeekBorn}</span>
-              </div>
-            </div>
-          ) : ageData?.errorMessage ? (
-            <div className="flex items-center justify-center gap-2 text-rose-400 text-xs bg-rose-950/40 border border-rose-800/60 px-4 py-3 rounded-xl text-center">
-              <AlertCircle className="w-4 h-4 shrink-0" />
-              <span>{ageData.errorMessage}</span>
-            </div>
-          ) : (
-            <div className="text-center py-6 text-slate-500 text-sm">
-              Enter your date of birth above to see your age directly.
-            </div>
-          )}
         </div>
       </div>
     </main>
